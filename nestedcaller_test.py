@@ -1,7 +1,4 @@
-## #!/usr/bin/env python
-## # -*- coding:utf-8
 import unittest
-## from sample import Calc
 
 from nestedcaller import nestedcaller
 
