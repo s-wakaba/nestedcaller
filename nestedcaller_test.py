@@ -19,6 +19,9 @@ class Test1(unittest.TestCase):
         a = nestedcaller(str, nestedcaller(int, float), tuple,
             nestedcaller(), nestedcaller(dict), nestedcaller(min, max, all, any))
         self.assertEqual(a.funcs, (str, int, float, tuple, dict, min, max, all, any))
+    def test_nonfuncerror(self):
+        with self.assertRaises(TypeError):
+            nestedcaller(str, None, int)
 
 def suite():
     suite = unittest.TestSuite()

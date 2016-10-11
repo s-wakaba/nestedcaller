@@ -42,17 +42,21 @@ nestedcaller_new(PyTypeObject *type, PyObject *args, PyObject *kw)
     m = PyTuple_GET_SIZE(args);
     n = 0;
     nested = 0;
-    if(type == &nestedcaller_type) {
-        for(i=0; i<m; ++i) {
-            PyObject *func = PyTuple_GET_ITEM(args, i);
-            if(Py_TYPE(func) != &nestedcaller_type) {
-                n += 1;
-            }
-            else {
-                PyObject *subfuncs = ((nestedcallerobject*)func)->funcs;
-                n += PyTuple_GET_SIZE(subfuncs);
-                nested = 1;
-            }
+    for(i=0; i<m; ++i) {
+        PyObject *func = PyTuple_GET_ITEM(args, i);
+        if(!PyCallable_Check(func)) {
+            Py_DECREF(pto);
+            PyErr_SetString(PyExc_TypeError,
+                "every argument must be callable");
+            return NULL;
+        }
+        if(type != &nestedcaller_type || Py_TYPE(func) != &nestedcaller_type) {
+            n += 1;
+        }
+        else {
+            PyObject *subfuncs = ((nestedcallerobject*)func)->funcs;
+            n += PyTuple_GET_SIZE(subfuncs);
+            nested = 1;
         }
     }
     if(!nested) {
@@ -69,6 +73,7 @@ nestedcaller_new(PyTypeObject *type, PyObject *args, PyObject *kw)
         for(i=0; i<m; ++i) {
             PyObject *func = PyTuple_GET_ITEM(args, i);
             if(Py_TYPE(func) != &nestedcaller_type) {
+                Py_INCREF(func);
                 PyTuple_SET_ITEM(pto->funcs, j++, func);
             }
             else {
@@ -76,8 +81,9 @@ nestedcaller_new(PyTypeObject *type, PyObject *args, PyObject *kw)
                 Py_ssize_t subi, subm;
                 subm = PyTuple_GET_SIZE(subfuncs);
                 for(subi = 0; subi < subm; ++subi) {
-                    PyTuple_SET_ITEM(pto->funcs, j++,
-                            PyTuple_GET_ITEM(subfuncs, subi));
+                    PyObject *subfunc = PyTuple_GET_ITEM(subfuncs, subi);
+                    Py_INCREF(subfunc);
+                    PyTuple_SET_ITEM(pto->funcs, j++, subfunc);
                 }
             }
         }
