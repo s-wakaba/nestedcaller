@@ -5,13 +5,14 @@
    by s-wakaba@github.com
 */
 
-/* Py_SETREF will be default macro after Python 3.6 */
+#if PY_VERSION_HEX < 0x03060000
 #define Py_SETREF(op, op2)                      \
     do {                                        \
         PyObject *_py_tmp = (PyObject *)(op);   \
         (op) = (op2);                           \
         Py_DECREF(_py_tmp);                     \
     } while (0)
+#endif
 
 
 typedef struct {
@@ -126,13 +127,12 @@ nestedcaller_call(nestedcallerobject *pto, PyObject *args, PyObject *kw)
     Py_INCREF(ret);
     n = PyTuple_GET_SIZE(pto->funcs);
     for(i=0; i<n; ++i) {
-        Py_SETREF(ret,
-            /*
-            enable after Python 3.6
-            _PyObject_CallArg1(PyTuple_GET_ITEM(pto->funcs, i), ret));
-            */
-            PyObject_CallFunctionObjArgs(PyTuple_GET_ITEM(pto->funcs, i),
-            ret, NULL));
+        PyObject *func = PyTuple_GET_ITEM(pto->funcs, i);
+#if PY_VERSION_HEX < 0x03060000
+        Py_SETREF(ret, PyObject_CallFunctionObjArgs(func, ret, NULL));
+#else
+        Py_SETREF(ret, _PyObject_CallArg1(func, ret));
+#endif
         if(ret == NULL)
             return NULL;
     }
