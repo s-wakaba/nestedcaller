@@ -25,7 +25,8 @@ static PyObject *
 nestedcaller_new(PyTypeObject *type, PyObject *args, PyObject *kw)
 {
     nestedcallerobject *pto;
-    int i, m, n, nested;
+    Py_ssize_t i, m, n;
+    int nested;
 
     if(kw != NULL && PyDict_Size(kw) > 0) {
         PyErr_SetString(PyExc_TypeError,
@@ -72,8 +73,8 @@ nestedcaller_new(PyTypeObject *type, PyObject *args, PyObject *kw)
             }
             else {
                 PyObject *subfuncs = ((nestedcallerobject*)func)->funcs;
-                int subi;
-                int subm = PyTuple_GET_SIZE(subfuncs);
+                Py_ssize_t subi, subm;
+                subm = PyTuple_GET_SIZE(subfuncs);
                 for(subi = 0; subi < subm; ++subi) {
                     PyTuple_SET_ITEM(pto->funcs, j++,
                             PyTuple_GET_ITEM(subfuncs, subi));
@@ -99,7 +100,7 @@ static PyObject *
 nestedcaller_call(nestedcallerobject *pto, PyObject *args, PyObject *kw)
 {
     PyObject *ret;
-    int i, n;
+    Py_ssize_t i, n;
 
     assert (PyTuple_Check(pto->funcs));
 
@@ -181,7 +182,7 @@ nestedcaller_repr(nestedcallerobject *pto)
         if (arglist == NULL)
             goto done;
     }
-    result = PyUnicode_FromFormat("%s(%U)", Py_TYPE(pto)->tp_name,
+    result = PyUnicode_FromFormat("%s(%U )", Py_TYPE(pto)->tp_name,
                                   arglist);
     Py_DECREF(arglist);
 
@@ -245,8 +246,6 @@ static PyTypeObject nestedcaller_type = {
     PyObject_GC_Del,                    /* tp_free */
 };
 
-/* module level code ********************************************************/
-
 PyDoc_STRVAR(module_doc,
 "nestedcaller module (C implementation)");
 
@@ -259,7 +258,7 @@ module_free(void *m)
 {
 }
 
-static struct PyModuleDef _functoolsmodule = {
+static struct PyModuleDef _nestedcallermodule = {
     PyModuleDef_HEAD_INIT,
     "_nestedcaller",
     module_doc,
@@ -274,27 +273,18 @@ static struct PyModuleDef _functoolsmodule = {
 PyMODINIT_FUNC
 PyInit__nestedcaller(void)
 {
-    int i;
     PyObject *m;
-    char *name;
-    PyTypeObject *typelist[] = {
-        &nestedcaller_type,
-        NULL
-    };
 
-    m = PyModule_Create(&_functoolsmodule);
+    m = PyModule_Create(&_nestedcallermodule);
     if (m == NULL)
         return NULL;
 
-    for (i=0 ; typelist[i] != NULL ; i++) {
-        if (PyType_Ready(&nestedcaller_type) < 0) {
-            Py_DECREF(m);
-            return NULL;
-        }
-        name = strchr(typelist[i]->tp_name, '.');
-        assert (name != NULL);
-        Py_INCREF(typelist[i]);
-        PyModule_AddObject(m, name+1, (PyObject *)typelist[i]);
+    if (PyType_Ready(&nestedcaller_type) < 0) {
+        Py_DECREF(m);
+        return NULL;
     }
+    Py_INCREF(&nestedcaller_type);
+    PyModule_AddObject(m, "nestedcaller", (PyObject *)&nestedcaller_type);
+
     return m;
 }

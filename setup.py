@@ -1,4 +1,5 @@
-from distutils.core import setup, Extension
+# from distutils.core import setup, Extension
+from setuptools import setup, Extension
 
 setup(
     name = 'nestedcaller',
@@ -12,4 +13,5 @@ setup(
         ),
     ],
     py_modules = ['nestedcaller'],
+    test_suite = 'nestedcaller_test.suite',
 )
