@@ -5,6 +5,7 @@
    by s-wakaba@github.com
 */
 
+/* Py_SETREF will be default macro after Python 3.6 */
 #define Py_SETREF(op, op2)                      \
     do {                                        \
         PyObject *_py_tmp = (PyObject *)(op);   \
@@ -126,6 +127,10 @@ nestedcaller_call(nestedcallerobject *pto, PyObject *args, PyObject *kw)
     n = PyTuple_GET_SIZE(pto->funcs);
     for(i=0; i<n; ++i) {
         Py_SETREF(ret,
+            /*
+            enable after Python 3.6
+            _PyObject_CallArg1(PyTuple_GET_ITEM(pto->funcs, i), ret));
+            */
             PyObject_CallFunctionObjArgs(PyTuple_GET_ITEM(pto->funcs, i),
             ret, NULL));
         if(ret == NULL)
