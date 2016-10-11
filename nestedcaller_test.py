@@ -22,6 +22,20 @@ class Test1(unittest.TestCase):
     def test_nonfuncerror(self):
         with self.assertRaises(TypeError):
             nestedcaller(str, None, int)
+    def test_error_in_funcs(self):
+        def f0(n):
+            def f1(a):
+                if n == 8:
+                    raise ValueError('n == 8')
+                a.append(n)
+                return a
+            return f1
+        b = []
+        nc = nestedcaller(f0(1), f0(2), f0(4), f0(8), f0(16))
+        with self.assertRaises(ValueError):
+            nc(b)
+        self.assertEqual(b, [1, 2, 4])
+            
 
 def suite():
     suite = unittest.TestSuite()
