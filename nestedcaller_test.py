@@ -3,22 +3,28 @@ import unittest
 from nestedcaller import nestedcaller
 import pickle
 
+class nestedcaller_ex(nestedcaller):
+    def __eq__(self, other):
+        return type(self) is type(other) and self.funcs == other.funcs
+
 class Test1(unittest.TestCase):
     def test_call(self):
         self.assertEqual('OK', nestedcaller(str.strip, str.upper)('  ok  '))
     def test_repr(self):
-        self.assertEqual('nestedcaller.nestedcaller( )'.format(str=str), repr(nestedcaller()))
-        self.assertEqual('nestedcaller.nestedcaller({str!r} )'.format(str=str), repr(nestedcaller(str)))
-        self.assertEqual('nestedcaller.nestedcaller({0} )'.format(', '.join(map(repr, [str, int]))), repr(nestedcaller(str, int)))
+        self.assertEqual('nestedcaller.nestedcaller()'.format(str=str), repr(nestedcaller()))
+        self.assertEqual('nestedcaller.nestedcaller({str!r})'.format(str=str), repr(nestedcaller(str)))
+        self.assertEqual('nestedcaller.nestedcaller({0})'.format(', '.join(map(repr, [str, int]))), repr(nestedcaller(str, int)))
     def test_pickle(self):
         a = nestedcaller(str.strip, str.upper)
         b = pickle.loads(pickle.dumps(a))
         self.assertIs(type(a), type(b))
         self.assertEqual(a.funcs, b.funcs)
     def test_nested(self):
-        a = nestedcaller(str, nestedcaller(int, float), tuple,
+        a = nestedcaller(str, nestedcaller_ex(int, float), tuple,
             nestedcaller(), nestedcaller(dict), nestedcaller(min, max, all, any))
-        self.assertEqual(a.funcs, (str, int, float, tuple, dict, min, max, all, any))
+        self.assertEqual(a.funcs, (str, nestedcaller_ex(int, float), tuple, dict, min, max, all, any))
+        # b = nestedcaller_ex(str, nestedcalle(int, float))
+        # self.assertEqual(a.funcs, (str, nestedcaller(int, float)))
     def test_nonfuncerror(self):
         with self.assertRaises(TypeError):
             nestedcaller(str, None, int)

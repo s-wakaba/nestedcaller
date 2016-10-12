@@ -191,7 +191,7 @@ nestedcaller_repr(nestedcallerobject *pto)
         if (arglist == NULL)
             goto done;
     }
-    result = PyUnicode_FromFormat("%s(%U )", Py_TYPE(pto)->tp_name,
+    result = PyUnicode_FromFormat("%s(%U)", Py_TYPE(pto)->tp_name,
                                   arglist);
     Py_DECREF(arglist);
 
