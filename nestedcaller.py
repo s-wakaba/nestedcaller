@@ -11,7 +11,13 @@ class nestedcaller:
         if not all(map(callable, args)):
             raise TypeError('not callable')
         self = super(nestedcaller, cls).__new__(cls)
-        self._funcs = args
+        a = []
+        for func in args:
+            if cls != nestedcaller or type(func) != nestedcaller:
+                a.append(func)
+            else:
+                a.extend(func.funcs)
+        self._funcs = tuple(a)
         return self
     @property
     def funcs(self):
@@ -27,7 +33,7 @@ class nestedcaller:
                 ', '.join(map(repr, self._funcs)))
 
 try:
-    # raise ImportError()
+    # raise ImportError() # for debug
     from _nestedcaller import nestedcaller
 except ImportError:
     from warnings import warn
