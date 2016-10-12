@@ -12,6 +12,8 @@
         (op) = (op2);                           \
         Py_DECREF(_py_tmp);                     \
     } while (0)
+#define _PyObject_CallArg1(f, a)                \
+    PyObject_CallFunctionObjArgs((f), (a), NULL)
 #endif
 
 
@@ -128,11 +130,7 @@ nestedcaller_call(nestedcallerobject *pto, PyObject *args, PyObject *kw)
     n = PyTuple_GET_SIZE(pto->funcs);
     for(i=0; i<n; ++i) {
         PyObject *func = PyTuple_GET_ITEM(pto->funcs, i);
-#if PY_VERSION_HEX < 0x03060000
-        Py_SETREF(ret, PyObject_CallFunctionObjArgs(func, ret, NULL));
-#else
         Py_SETREF(ret, _PyObject_CallArg1(func, ret));
-#endif
         if(ret == NULL)
             return NULL;
     }
